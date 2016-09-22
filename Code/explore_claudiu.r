@@ -7,6 +7,7 @@ library(reshape2)
 #library(PerformanceAnalytics)
 
 load("DataWork/VixDat.Rdata")
+load("DataWork/WeekDat.Rdata")
 
 #chart.RelativePerformance(VixDat$SPXRet[-1],VixDat$PUTRet[-1]) #does not work
 
@@ -21,3 +22,8 @@ plotdat2 <- data.frame(Price=coredata(VixDat$VXO[-1]),Date=index(VixDat[-1]))
 g2 <- ggplot(plotdat2,aes(x=Date,y=VXO))+geom_line()
 g <- grid.arrange(g1,g2,nrow=2,heights=c(50,25))
 
+summary(coredata(WeekDat$PUTWkRet))
+hist(coredata(WeekDat$PUTWkRet))
+pacf(WeekDat$PUTWkRet)
+pacf(WeekDat$BFLYWkRet)
+pacf(WeekDat$SPXWkRet)
