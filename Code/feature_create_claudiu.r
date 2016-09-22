@@ -21,3 +21,10 @@ if (!("VXORet" %in% colnames(VixDat))) {
 }
 
 save(VixDat,file="DataWork/VixDat.Rdata")
+
+PutWeekly  <- periodReturn(VixDat$PUT, period='weekly',type='arithmetic')
+BflyWeekly <- periodReturn(VixDat$BFLY,period='weekly',type='arithmetic')
+WeekDat <- merge(PutWeekly*100,BflyWeekly*100) #scale to percentage
+names(WeekDat) <- c("PUTWkRet","BFLYWkRet")
+
+save(WeekDat,file="DataWork/WeekDat.Rdata")
