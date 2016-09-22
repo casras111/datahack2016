@@ -7,7 +7,6 @@ aggRet<-cumprod(Hefresh)
 x<-ifelse(runif(nrow(aggRet),-1,1)<0.5,-1,1)
 hef2<-1+cumprod(Hefresh*x)
 dat<-merge(aggRet,x)
-plot.zoo(aggRet)
 plot(hef2)
 
 
