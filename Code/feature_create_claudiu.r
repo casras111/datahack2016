@@ -47,5 +47,6 @@ for (i in 2:nrow(WeekDat)) {
   wksPUT <- t(coredata(last(wksPUT,'5 days')))
   WeekDat[i,(oldn+11):(oldn+10+length(wksPUT))] <- wksPUT
 }
+WeekDat <- WeekDat[-1]
 
 save(WeekDat,file="DataWork/WeekDat.Rdata")
