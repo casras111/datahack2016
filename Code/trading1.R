@@ -1,6 +1,6 @@
 library(zoo)
 library(xts)
-load("C:/Users/essdr/Documents/GitHub/datahack2016/DataWork/VixDat.Rdata")
+load("DataWork/VixDat.Rdata")
 
 Hefresh = 1+(as.numeric(VixDat[-1,"PUT"]) - as.numeric(VixDat[-nrow(VixDat),"PUT"]))/VixDat[-nrow(VixDat),"PUT"]
 aggRet<-cumprod(Hefresh)
