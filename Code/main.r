@@ -9,5 +9,5 @@ source("Code/explore_claudiu.r")
 #Classifiers from all, modify as needed to use what you're testing now
 source("Code/Classification.R") #Oz current one
 
-#Placeholder for Dror's module
-#source("Code/Trading.r")
+#Dror's trading and statistics module
+source("Code/trading1.r")

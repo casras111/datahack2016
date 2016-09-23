@@ -1,19 +1,20 @@
-#Classifier with regression
+#Classifier with svm
 
 library(quantmod)
 library(ggplot2)
 library(gridExtra)
 library(reshape2)
 library(caret)
-library(MASS)
+library(kernlab)      #svm for caret
 
 load("DataWork/VixDat.Rdata")
 load("DataWork/WeekDat.Rdata")
 
 WeekDat$PUTWkRet <- lag(WeekDat$PUTWkRet,-1) #dependent value
 WeekDat <- WeekDat[-NROW(WeekDat),]          #remove last row with NA dependent
+WeekDat$Direction <- ifelse(WeekDat$PUTWkRet<(-5),-1,1)
 
-trainIndx <- createDataPartition(WeekDat$PUTWkRet,times=1,p=0.7,list=FALSE)
+trainIndx <- createDataPartition(WeekDat$Direction,times=1,p=0.7,list=FALSE)
 
 WeekDatTrain <- WeekDat[trainIndx]
 WeekDatTest  <- WeekDat[-trainIndx]
@@ -21,22 +22,23 @@ WeekDatTest  <- WeekDat[-trainIndx]
 objControl <- trainControl(method='repeatedcv',number=5,repeats=10)
 prednames <- colnames(WeekDat)[grep("pred",colnames(WeekDat))]
 f <- paste(prednames,collapse ="+")
-#f <- "pred1+pred3+pred4+pred5+pred6+pred7+pred9+
-#      pred12+pred13+pred15+pred16+pred17"
-reg1 <- train(as.formula(paste0("PUTWkRet~",f)),method="rlm",
-              data=WeekDatTrain,trControl=objControl,maxit=30)
-#reg1 <- rlm(as.formula(paste0("PUTWkRet~",f)),data=WeekDatTrain,
-#            maxit=30,method="MM")
-summary(reg1)
+
+WeekDatdf <- as.data.frame(coredata(WeekDatTrain))
+WeekDatdf$Direction <- as.factor(WeekDatdf$Direction)
+svm_traingrid <- expand.grid(sigma=seq(0.01,0.07,0.01),C=seq(3,5,0.5))
+svmfit1 <- train(as.formula(paste0("Direction~",f)),
+                            data=WeekDatdf,trControl=objControl,
+                            method="svmRadial")
+                 #tuneGrid=svm_traingrid)
+print(plot(svmfit1))
+svmfit1
 
 #check accuracy on train data
-pred.train <- predict(reg1,newdata=WeekDatTrain)
-pred.train <- ifelse(pred.train>0,1,-1)
-#pred.train <- ifelse(pred.train<(-3),-1,ifelse(pred.train>0.1,1,0))
-y <- ifelse(WeekDatTrain$PUTWkRet>0,1,-1)
+pred.train <- predict(svmfit1,newdata=WeekDatdf)
+y <- ifelse(WeekDatTrain$PUTWkRet<(-5),-1,1)
 (contingency <- prop.table(table(pred=pred.train,train=y)))
 sum(diag(contingency))
-profit.train <- WeekDatTrain$PUTWkRet*pred.train
+profit.train <- WeekDatTrain$PUTWkRet*as.numeric(as.character(pred.train))
 cumprofit.train <- cumprod(1+profit.train/100)
 
 plotxts <- merge(cumprod(1+WeekDatTrain$PUTWkRet/100),cumprofit.train)
@@ -49,13 +51,13 @@ g1 <- g1+ggtitle("CumReturn compare for PUT strategy train data")
 print(g1)
 
 #check accuracy on test data
-p1 <- predict(reg1,newdata = WeekDatTest)
-pred.test <- ifelse(p1>0,1,-1)
-#pred.test <- ifelse(p1<(-3),-1,ifelse(p1>0.1,1,0))
-y <- ifelse(WeekDatTest$PUTWkRet>0,1,-1)
+WeekDatdf <- as.data.frame(coredata(WeekDatTest))
+WeekDatdf$Direction <- as.factor(WeekDatdf$Direction)
+pred.test <- predict(svmfit1,newdata = WeekDatdf)
+y <- ifelse(WeekDatTest$PUTWkRet<(-5),-1,1)
 (contingency <- prop.table(table(pred=pred.test,train=y)))
 sum(diag(contingency))
-profit.test <- WeekDatTest$PUTWkRet*pred.test
+profit.test <- WeekDatTest$PUTWkRet*as.numeric(as.character(pred.test))
 cumprofit.test <- cumprod(1+profit.test/100)
 
 plotxts <- merge(cumprod(1+WeekDatTest$PUTWkRet/100),cumprofit.test)
@@ -68,8 +70,8 @@ g1 <- g1+ggtitle("CumReturn compare for PUT strategy test data")
 print(g1)
 
 p3 <- predict(reg1,newdata = WeekDat)
-WeekDat$Prediction <- ifelse(p3>0,1,-1)
-#WeekDat$Prediction <- ifelse(p3<(-3),-1,ifelse(p3>0.1,1,0))
+WeekDat$Prediction <- ifelse(p3<(-5),-1,1)
+y <- ifelse(WeekDat$PUTWkRet<(-5),-1,1)
 WeekDatPred <- WeekDat
 
 save(WeekDatPred,file="DataWork/WeekDatPred.Rdata")

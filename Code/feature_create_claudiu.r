@@ -49,4 +49,21 @@ for (i in 2:nrow(WeekDat)) {
 }
 WeekDat <- WeekDat[-1]
 
+WeekDat$pred16 <- ifelse(WeekDat$pred1<10,1,ifelse(WeekDat$pred1>25,3,2))
+VixDat$pred17 <- MACD(VixDat$VXO)$macd
+VixDat$pred18 <- MACD(VixDat$SPX)$macd
+VixDat$pred19 <- MACD(VixDat$PUT)$macd
+WeekDat <- merge(WeekDat,VixDat$pred17,join='left')
+WeekDat <- merge(WeekDat,VixDat$pred18,join='left')
+WeekDat <- merge(WeekDat,VixDat$pred19,join='left')
+
+n <- 19 #number of predictors
+prenames <- paste0("pred",1:n)
+
+for (i in 1:19) {
+  naindx <- which(is.na(WeekDat[,prenames[i]]))
+  if (length(naindx)>0) {WeekDat <- WeekDat[-naindx,]}
+}
+
+
 save(WeekDat,file="DataWork/WeekDat.Rdata")
